@@ -4,10 +4,10 @@ import dotenv from 'dotenv';
 import WeatherSummary from './model/weatherSummarySchema.js';
 import Customer from './model/Customer.js';
 import cron from 'node-cron';
-import fetchWeatherDataAndCheckThresholds from './services/fetchWeatherDataAndCheckThresholds.js';
+// import fetchWeatherDataAndCheckThresholds from './services/fetchWeatherDataAndCheckThresholds.js';
 import Threshold from './model/thresholdSchema.js';
 import cors from 'cors';
-
+import { fetchWeatherData } from './services/weatherService.js';
 // Load environment variables from .env file
 dotenv.config();
 
@@ -81,10 +81,18 @@ app.post('/api/set-threshold', async (req, res) => {
 });
 
 // Schedule the weather data fetching job
-cron.schedule('*/2 * * * *', () => {
-  fetchWeatherDataAndCheckThresholds();
-});
+// cron.schedule('*/2 * * * *', () => {
+//   fetchWeatherDataAndCheckThresholds();
+// });
 
+app.get('/api/', async (req, res) => {
+  try {
+      const data = await fetchWeatherData();
+      return res.json(data);
+  } catch (error) {
+      return res.status(500).json({ error: 'Failed to fetch weather data.' });
+  }
+});
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

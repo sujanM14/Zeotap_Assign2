@@ -10,23 +10,15 @@ const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port:465,
   auth: {
-    user: process.env.EMAIL_USER, // Email from .env
-    pass: process.env.EMAIL_PASS,  // Password from .env
+    user: process.env.EMAIL_USER || "yasminmujawar425@gmail.com", // Email from .env
+    pass: process.env.EMAIL_PASS || "ocmt wvjb vhvh peep",  // Password from .env
   }
 });
 
-const fetchWeatherDataAndCheckThresholds = async () => {
+const fetchWeatherDataAndCheckThresholds = async (successfulResponses) => {
   try {
-    const cities = ['Delhi', 'Mumbai', 'Chennai', 'Bangalore', 'Kolkata', 'Hyderabad'];
-    const API_KEY = process.env.REACT_APP_WEATHER_API_KEY ;
-    const responses = await Promise.allSettled(
-      cities.map(city => axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}`))
-    );
-
-    const successfulResponses = responses.filter(response => response.status === 'fulfilled').map(res => res.value.data);
-
-    console.log(successfulResponses);
-
+    // console.log("here in fetch");
+    // console.log(successfulResponses);
     // Now compare weather data with thresholds
     for (const weatherData of successfulResponses) {
       const { main: { temp }, name: city, weather } = weatherData; // Get temperature and city name
