@@ -7,7 +7,7 @@ let weatherData = [];
 let error = null;
 
 export const fetchWeatherData = async () => {
-    const API_KEY = process.env.WEATHER_API_KEY || "77d1b25a3a8edd5b3335c72c30e3cdb6"; // Ensure your .env file contains this
+    const API_KEY = process.env.WEATHER_API_KEY ; // Ensure your .env file contains this
     try {
         const responses = await Promise.allSettled(
             cities.map(city =>
