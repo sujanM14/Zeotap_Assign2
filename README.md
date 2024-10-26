@@ -63,8 +63,8 @@ To set up the project locally, follow these steps:
    cd Zeotap_Assign2
 2. Install backend dependencies:
     ```bash
-cd backend
-npm install
+    cd backend
+    npm install
 
 3. Set up the environment variables:
 
@@ -73,16 +73,16 @@ Add your OpenWeatherMap API key and MongoDB connection string to the .env file.
 
 4. Install frontend dependencies:
  ```bash
-cd ../frontend
-npm install
+ cd ../frontend
+ npm install
 
 5. Start the backend server:
  ```bash
-cd backend
-npm start
+ cd backend
+ npm start
 
 6. Start the frontend application:
  ```bash
-cd ../frontend
-npm start
+ cd ../frontend
+ npm start
 Access the application in your browser at http://localhost:3000.
