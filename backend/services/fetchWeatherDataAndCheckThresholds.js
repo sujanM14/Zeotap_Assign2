@@ -10,35 +10,39 @@ const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port:465,
   auth: {
-    user: process.env.EMAIL_USER || "yasminmujawar425@gmail.com", // Email from .env
-    pass: process.env.EMAIL_PASS || "ocmt wvjb vhvh peep",  // Password from .env
+    user: process.env.EMAIL_USER , // Email from .env
+    pass: process.env.EMAIL_PASS ,  // Password from .env
   }
 });
 
 const fetchWeatherDataAndCheckThresholds = async (successfulResponses) => {
   try {
-    // console.log("here in fetch");
-    // console.log(successfulResponses);
-    // Now compare weather data with thresholds
     for (const weatherData of successfulResponses) {
       const { main: { temp }, name: city, weather } = weatherData; // Get temperature and city name
 
-      // Convert temp from Kelvin to Celsius
-      const tempCelsius = temp - 273.15;
-
-      // Check thresholds from the database
+      const tempCelsius = temp - 273.15; // Convert temp from Kelvin to Celsius
       const thresholds = await Threshold.find({ city });
 
-      // Loop through each threshold and check if any are breached
       for (const threshold of thresholds) {
         if (tempCelsius > threshold.maxTemp || tempCelsius < threshold.minTemp || weather[0].description.includes(threshold.weatherCondition)) {
-          // If a threshold is breached, find all customers in the city
+          // Find all customers in the city
           const customers = await Customer.find({ city });
 
-          console.log(threshold);
-          // Send alert to each customer
           for (const customer of customers) {
-            await sendWeatherAlert(customer.email, city, tempCelsius, weather[0].description);
+            // Check how many alerts were sent today
+            const today = new Date();
+            const alertsToday = customer.alertTimestamps.filter(timestamp => {
+              const alertDate = new Date(timestamp);
+              return alertDate.getDate() === today.getDate() && alertDate.getMonth() === today.getMonth() && alertDate.getFullYear() === today.getFullYear();
+            });
+
+            // Send alert only if fewer than 2 emails have been sent today
+            if (alertsToday.length < 2) {
+              await sendWeatherAlert(customer.email, city, tempCelsius, weather[0].description);
+              // Update the customer's alert timestamps
+              customer.alertTimestamps.push(new Date());
+              await customer.save();
+            }
           }
         }
       }

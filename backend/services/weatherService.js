@@ -1,13 +1,14 @@
 // services/weatherService.js
 import axios from 'axios';
+import cron from 'node-cron'; // Ensure you import cron
 import fetchWeatherDataAndCheckThresholds from './fetchWeatherDataAndCheckThresholds.js';
-const cities = ['Delhi', 'Mumbai', 'Chennai', 'Bangalore', 'Kolkata', 'Hyderabad'];
 
+const cities = ['Delhi', 'Mumbai', 'Chennai', 'Bangalore', 'Kolkata', 'Hyderabad'];
 let weatherData = [];
 let error = null;
 
 export const fetchWeatherData = async () => {
-    const API_KEY = process.env.WEATHER_API_KEY ; // Ensure your .env file contains this
+    const API_KEY = process.env.WEATHER_API_KEY; // Ensure your .env file contains this
     try {
         const responses = await Promise.allSettled(
             cities.map(city =>
@@ -18,19 +19,22 @@ export const fetchWeatherData = async () => {
         const successfulResponses = responses.filter(response => response.status === 'fulfilled');
         const failedResponses = responses.filter(response => response.status === 'rejected');
 
-        weatherData = successfulResponses.map(response => response.value.data); // Store the fetched weather data
-        
-        await fetchWeatherDataAndCheckThresholds(weatherData);
+        // Store the fetched weather data
+        weatherData = successfulResponses.map(response => response.value.data); 
+
+        // Log failed responses
+        if (failedResponses.length > 0) {
+            failedResponses.forEach((failed) => {
+                console.warn('Failed to fetch data for city:', failed.reason.config.url);
+            });
+        }
+
         // Only set error if all requests failed
         if (successfulResponses.length === 0) {
             error = 'Failed to fetch weather data.';
-        } else if (failedResponses.length > 0) {
-            console.warn('Some requests failed:', failedResponses);
         } else {
             error = null; // Clear any previous error if all requests succeed
         }
-
-        // console.log(weatherData); // Log fetched data
 
         return weatherData; // Return the fetched weather data
     } catch (err) {
@@ -40,11 +44,14 @@ export const fetchWeatherData = async () => {
     }
 };
 
-// Function to periodically update the weather data (optional)
-export const updateWeatherData = async () => {
+// Function to periodically update the weather data
+const updateWeatherData = async () => {
     await fetchWeatherData(); // Call the fetching function
-    // Optionally, implement logic for sending alerts or checking thresholds
+    await fetchWeatherDataAndCheckThresholds(weatherData); // Check thresholds
 };
+
+// Schedule the weather data fetching every 2 minutes
+cron.schedule('*/2 * * * *', updateWeatherData);
 
 // Fetch weather data immediately when the server starts
 updateWeatherData();
